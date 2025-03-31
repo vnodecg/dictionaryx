@@ -4,11 +4,13 @@ import 'package:dictionaryx/dictentry.dart';
 import 'package:dictionaryx/src/dict_abstract.dart';
 import 'package:dictionaryx/src/dictassets.dart';
 import 'package:flutter/services.dart';
+import 'package:retrieval/trie.dart';
 
 /// Complete dictionary with meanings, synonyms and antonyms.
 class DictionaryMSAFlutter extends DictionaryAbs {
   String _currentWord = '';
   Map<String, dynamic> _currentJson = {};
+  Trie? _trie;
 
   String _resolveAsset(String word) {
     var asset = DictAssets.dictAssets
@@ -64,5 +66,27 @@ class DictionaryMSAFlutter extends DictionaryAbs {
       ret += (await _getAssetBundleFor(asset)).keys.length;
     }
     return ret;
+  }
+
+  // /// Returns the list of all words in the dictionary.
+  Future<List<String>> words() async {
+    var ret = <String>[];
+    for (var asset in DictAssets.dictAssets) {
+      ret.addAll((await _getAssetBundleFor(asset)).keys);
+    }
+    return ret;
+  }
+
+  Future<Trie> trie() async {
+    if (_trie == null) {
+      _trie = Trie();
+      for (var asset in DictAssets.dictAssets) {
+        var bundle = await _getAssetBundleFor(asset);
+        for (var word in bundle.keys) {
+          _trie!.insert(word);
+        }
+      }
+    }
+    return _trie!;
   }
 }
